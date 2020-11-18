@@ -29,6 +29,9 @@ db = mysql.connector.connect(
   database="azhack"
 )
 
+app = Flask(__name__)
+CORS(app)
+
 @app.route("/users/<string:user_id>/", methods=["GET", "PUT", "POST", "DELETE"])
 def users(user_id):
     if request.method == "POST":
@@ -81,7 +84,5 @@ def leaderboard_organisation():
     return ""
 
 if __name__ == "__main__":
-    app = Flask(__name__)
-    CORS(app)
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
