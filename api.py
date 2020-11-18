@@ -1,5 +1,4 @@
 from flask import Flask, request, url_for
-from flask_api import FlaskAPI, status, exceptions
 from flask_cors import CORS
 import mysql.connector
 import csv
@@ -9,8 +8,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Allow automatic deployment on Heroku.
-port = int(os.environ.get('PORT', '5000'))
-app.run(host='0.0.0.0', port=port)
+app.run(host='0.0.0.0', '5000')
 
 try:
     # Heroku, use Config vars
