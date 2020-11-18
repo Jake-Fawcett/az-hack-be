@@ -62,7 +62,15 @@ def users(user_id):
     elif request.method == "PUT":
         return ""
     else: # request.method == "DELETE":
-        return ""
+        # Query to delete from users.
+        query = "DELETE FROM {0} WHERE user_id = '{1}';"
+        # Delete from all tables.
+        for table in ("Users", "Organisations", "Reports"):
+            cursor = db.cursor(dictionary=True)
+            formatted_query = query.format(table, user_id)
+            cursor.execute(formatted_query)
+        db.commit()
+        return "Done."
 
 @app.route("/users/<string:user_id>/report/<string:date>/", methods=["GET", "PUT", "POST", "DELETE"])
 def user_reports(user_id, date):
