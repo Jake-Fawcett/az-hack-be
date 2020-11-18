@@ -4,13 +4,13 @@ import mysql.connector
 import csv
 import os
 
-try:
+if os.getenv('host'):
     # Heroku, use Config vars
     host = os.getenv('host')
     port = os.getenv('port')
     user = os.getenv('user')
     password = os.getenv('password')
-except:
+else:
     # Local environment, use credentials.csv
     with open('credentials.csv') as file:
         reader = csv.reader(file, delimiter=',')
@@ -19,7 +19,6 @@ except:
     port = credentials[1]
     user = credentials[2]
     password = credentials[3]
-
 
 # Connect to mysql instance.
 db = mysql.connector.connect(
@@ -30,14 +29,36 @@ db = mysql.connector.connect(
   database="azhack"
 )
 
+app = Flask(__name__)
+CORS(app)
+
 @app.route("/users/<string:user_id>/", methods=["GET", "PUT", "POST", "DELETE"])
 def users(user_id):
-    print(request.args)
     if request.method == "POST":
         #request.form
         return ""
     elif request.method == "GET":
-        return ""
+        # Get the user with user_id.
+        get_user_query = "SELECT * FROM Users WHERE user_id = '{}';"
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(get_user_query.format(user_id))
+        results = cursor.fetchall()
+        # Return error message if no user.
+        if len(results) == 0:
+            return "No user with user_id={}.".format(user_id)
+        # Otherwise get user data.
+        user = results[0]
+        # Get the user's organisations.
+        get_users_organisations_query = "SELECT organisation_name FROM Organisations WHERE user_id = '{}';"
+        cursor.execute(get_users_organisations_query.format(user_id))
+        # Extract organisations into a list of strings.
+        organisations = []
+        for result in cursor.fetchall():
+            organisations.append(result["organisation_name"])
+        # Add the organisations to user.
+        user["organisations"] = organisations
+        # return the user.
+        return user
     elif request.method == "PUT":
         return ""
     else: # request.method == "DELETE":
@@ -63,7 +84,5 @@ def leaderboard_organisation():
     return ""
 
 if __name__ == "__main__":
-    app = Flask(__name__)
-    CORS(app)
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, host='0.0.0.0', port=port)

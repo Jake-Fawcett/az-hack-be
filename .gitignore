@@ -1,4 +1,5 @@
 .vscode
+.idea
 credentials.csv
 
 # Byte-compiled / optimized / DLL files
