@@ -12,16 +12,29 @@ CORS(app)
 port = int(os.environ.get('PORT', '5000'))
 app.run(host='0.0.0.0', port=port)
 
-with open('credentials.csv') as file:
-    reader = csv.reader(file, delimiter=',')
-    credentials = next(reader)
+try:
+    # Heroku, use Config vars
+    host = os.getenv('host')
+    port = os.getenv('port')
+    user = os.getenv('user')
+    password = os.getenv('password')
+except:
+    # Local environment, use credentials.csv
+    with open('credentials.csv') as file:
+        reader = csv.reader(file, delimiter=',')
+        credentials = next(reader)
+    host = credentials[0]
+    port = credentials[1]
+    user = credentials[2]
+    password = credentials[3]
+
 
 # Connect to mysql instance.
 db = mysql.connector.connect(
-  host=credentials[0],
-  port=credentials[1],
-  user=credentials[2],
-  password=credentials[3],
+  host=host,
+  port=port,
+  user=user,
+  password=password,
   database="azhack"
 )
 
