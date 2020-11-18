@@ -1,3 +1,2 @@
-Flask-API
 flask-cors
 mysql-connector-python
