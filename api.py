@@ -7,9 +7,6 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Allow automatic deployment on Heroku.
-app.run(host='0.0.0.0', '5000')
-
 try:
     # Heroku, use Config vars
     host = os.getenv('host')
@@ -69,4 +66,4 @@ def leaderboard_organisation():
     return ""
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', '5000')
