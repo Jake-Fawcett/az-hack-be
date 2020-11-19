@@ -30,6 +30,7 @@ db = mysql.connector.connect(
 )
 
 app = Flask(__name__)
+app.config['CORS_HEADERS'] = 'Content-Type'
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 user_table_headers = ["user_id", "user_name", "diet_default", "car_travel_default", "train_travel_default",
