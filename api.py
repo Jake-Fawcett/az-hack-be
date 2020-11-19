@@ -106,7 +106,6 @@ def users(user_id):
         query = "DELETE FROM {0} WHERE user_id = '{1}';"
         # Delete from all tables.
         for table in ("Users", "Organisations", "Reports"):
-            cursor = db.cursor(dictionary=True)
             formatted_query = query.format(table, user_id)
             cursor.execute(formatted_query)
         db.commit()
@@ -117,7 +116,18 @@ def user_reports(user_id, date):
     if request.method == "POST":
         return ""
     elif request.method == "GET":
-        return ""
+        get_report_query = "SELECT * FROM Reports WHERE user_id = '{}' and date = '{}';"
+        get_report_query = get_report_query.format(user_id, date)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(get_report_query)
+        results = cursor.fetchall()
+        if len(results) == 0:
+            return "No reports with date and user_id."
+        else:
+            report = results[0]
+            # Format date
+            report["date"] = report["date"].isoformat()
+            return report
     elif request.method == "PUT":
         return ""
     else: # request.method == "DELETE":
@@ -133,5 +143,5 @@ def leaderboard_organisation():
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
-    print(os.environ)
+    # print(os.environ)
     app.run(debug=True, host='0.0.0.0', port=port)
