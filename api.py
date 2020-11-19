@@ -161,11 +161,128 @@ def user_reports(user_id, date):
 
 @app.route("/leaderboard", methods=["GET"])
 def leaderboard():
-    return "Hello World"
+    # Get all the reports for the past week.
+    get_reports_from_past_week_query = "SELECT * FROM Reports WHERE date >= curdate()-7 AND date < curdate()+1;"
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(get_reports_from_past_week_query)
+    results = cursor.fetchall()
+    # Compute scores for each user.
+    all_users_scores_1w = {}
+    for report in results:
+        # print(report)
+        user_id = report["user_id"]
+        # Add new dict if its the frst report for this user.
+        if user_id not in all_users_scores_1w:
+            # Get user_name for this user_id.
+            get_user_name = "SELECT user_name FROM Users WHERE user_id = '{}';".format(user_id)
+            cursor = db.cursor(dictionary=True)
+            cursor.execute(get_user_name)
+            user_name = cursor.fetchall()[0]["user_name"]
+            all_users_scores_1w[user_id] = {
+                "user_id": user_id,
+                "user_name": user_name,
+                "diet_score": 0,
+                "car_travel_score": 0,
+                "bus_travel_score": 0,
+                "train_travel_score": 0,
+                "food_disposal_score": 0,
+                "plastic_disposal_score": 0,
+                "paper_disposal_score": 0,
+                "glass_disposal_score": 0,
+                "tin_disposal_score": 0,
+                "mobile_screentime_score": 0,
+                "computer_screentime_score": 0,
+                "tv_screentime_score": 0,
+                "total_score": 0
+            }
+        # Increment scores for each area and total
+        # diet
+        diet_score = diet_to_score(report["diet"])
+        all_users_scores_1w[user_id]["diet_score"] += diet_score
+        all_users_scores_1w[user_id]["total_score"] += diet_score
+        # car_travel
+        car_travel_score = car_travel_to_score(report["car_travel"])
+        all_users_scores_1w[user_id]["car_travel_score"] += car_travel_score
+        all_users_scores_1w[user_id]["total_score"] += car_travel_score
+        # bus_travel
+        bus_travel_score = bus_travel_to_score(report["bus_travel"])
+        all_users_scores_1w[user_id]["bus_travel_score"] += bus_travel_score
+        all_users_scores_1w[user_id]["total_score"] += bus_travel_score
+        # train_travel
+        train_travel_score = train_travel_to_score(report["train_travel"])
+        all_users_scores_1w[user_id]["train_travel_score"] += train_travel_score
+        all_users_scores_1w[user_id]["total_score"] += train_travel_score
+        # food_disposal
+        food_disposal_score = disposal_to_score(report["food_disposal"])
+        all_users_scores_1w[user_id]["food_disposal_score"] += food_disposal_score
+        all_users_scores_1w[user_id]["total_score"] += food_disposal_score
+        # plastic_disposal
+        plastic_disposal_score = disposal_to_score(report["plastic_disposal"])
+        all_users_scores_1w[user_id]["plastic_disposal_score"] += plastic_disposal_score
+        all_users_scores_1w[user_id]["total_score"] += plastic_disposal_score
+        # paper_disposal
+        paper_disposal_score = disposal_to_score(report["paper_disposal"])
+        all_users_scores_1w[user_id]["paper_disposal_score"] += paper_disposal_score
+        all_users_scores_1w[user_id]["total_score"] += paper_disposal_score
+        # glass_disposal
+        glass_disposal_score = disposal_to_score(report["glass_disposal"])
+        all_users_scores_1w[user_id]["glass_disposal_score"] += glass_disposal_score
+        all_users_scores_1w[user_id]["total_score"] += glass_disposal_score
+        # tin_disposal
+        tin_disposal_score = disposal_to_score(report["tin_disposal"])
+        all_users_scores_1w[user_id]["tin_disposal_score"] += tin_disposal_score
+        all_users_scores_1w[user_id]["total_score"] += tin_disposal_score
+        # mobile_screentime
+        mobile_screentime_score = mobile_screentime_to_score(report["mobile_screentime"])
+        all_users_scores_1w[user_id]["mobile_screentime_score"] += mobile_screentime_score
+        all_users_scores_1w[user_id]["total_score"] += mobile_screentime_score
+        # computer_screentime
+        computer_screentime_score = computer_screentime_to_score(report["computer_screentime"])
+        all_users_scores_1w[user_id]["computer_screentime_score"] += computer_screentime_score
+        all_users_scores_1w[user_id]["total_score"] += computer_screentime_score
+        # tv_screentime
+        tv_screentime_score = tv_screentime_to_score(report["tv_screentime"])
+        all_users_scores_1w[user_id]["tv_screentime_score"] += tv_screentime_score
+        all_users_scores_1w[user_id]["total_score"] += tv_screentime_score
+    return all_users_scores_1w
 
-@app.route("/leaderboard/<string:organisation_name>", methods=["GET"])
-def leaderboard_organisation():
-    return ""
+def diet_to_score(diet):
+    if diet == "meat":
+        return 4
+    elif diet == "vegeterian":
+        return 3
+    elif diet == "pescetarian":
+        return 2
+    elif diet == "vegan":
+        return 1
+    else:
+        return 0
+
+def car_travel_to_score(car_travel):
+    return car_travel*3
+
+def bus_travel_to_score(bus_travel):
+    return bus_travel*2
+
+def train_travel_to_score(train_travel):
+    return train_travel*1
+
+def disposal_to_score(disposal):
+    if disposal == 1:
+        # Did dispose properly, not penalty score.
+        return 0
+    else:
+        # Penalty score for not disposing properly.
+        return 1
+
+def mobile_screentime_to_score(mobile_screentime):
+    return mobile_screentime*1
+
+def computer_screentime_to_score(computer_screentime):
+    return computer_screentime*2
+
+def tv_screentime_to_score(tv_screentime):
+    return tv_screentime*3
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
