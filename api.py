@@ -33,9 +33,12 @@ app = Flask(__name__)
 CORS(app)
 
 user_table_headers = ["user_id", "user_name", "diet_default", "car_travel_default", "train_travel_default",
-        "bus_travel_default", "food_disposal_default", "plastic_disposal_default", "paper_disposal_default",
-        "glass_disposal_default", "tin_disposal_default", "mobile_screentime_default", "computer_screetime_default",
-        "tv_screentime_default"]
+    "bus_travel_default", "food_disposal_default", "plastic_disposal_default", "paper_disposal_default",
+    "glass_disposal_default", "tin_disposal_default", "mobile_screentime_default", "computer_screetime_default",
+    "tv_screentime_default"]
+
+report_table_headers = ["date", "user_id", "use_defaults", "diet", "car_travel", "train_travel", "bus_travel", "food_disposal",
+    "plastic_disposal", "paper_disposal", "glass_disposal", "tin_disposal", "mobile_screentime", "computer_screentime", "tv_screentime"]
 
 @app.route("/users/<string:user_id>/", methods=["GET", "PUT", "POST", "DELETE"])
 def users(user_id):
@@ -114,7 +117,30 @@ def users(user_id):
 @app.route("/users/<string:user_id>/report/<string:date>/", methods=["GET", "PUT", "POST", "DELETE"])
 def user_reports(user_id, date):
     if request.method == "POST":
-        return ""
+        # Check this user doesn't already have a report today.
+        get_report_query = "SELECT * FROM Reports WHERE user_id = '{}' and date = '{}';"
+        get_report_query = get_report_query.format(user_id, date)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(get_report_query)
+        results = cursor.fetchall()
+        if len(results) != 0:
+            return "This user has already reported for date."
+        # Add the report to the database.
+        report = request.json
+        # Extract the report features from the request body.
+        report_features = []
+        for header in report_table_headers:
+            if type(report[header]) == str:
+                # Wrap strings with quotes
+                report_features.append("'{}'".format(report[header]))
+            else:
+                report_features.append(str(report[header]))
+        # Insert the new user.
+        insert_report_query = "INSERT INTO Reports ({}) VALUES ({});".format(", ".join(report_table_headers), ", ".join(report_features))
+        print(insert_report_query)
+        cursor.execute(insert_report_query)
+        db.commit()
+        return "Done."
     elif request.method == "GET":
         get_report_query = "SELECT * FROM Reports WHERE user_id = '{}' and date = '{}';"
         get_report_query = get_report_query.format(user_id, date)
