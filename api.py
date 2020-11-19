@@ -30,7 +30,8 @@ db = mysql.connector.connect(
 )
 
 app = Flask(__name__)
-CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 user_table_headers = ["user_id", "user_name", "diet_default", "car_travel_default", "train_travel_default",
     "bus_travel_default", "food_disposal_default", "plastic_disposal_default", "paper_disposal_default",
@@ -286,5 +287,4 @@ def tv_screentime_to_score(tv_screentime):
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
-    # print(os.environ)
     app.run(debug=True, host='0.0.0.0', port=port)
