@@ -30,7 +30,7 @@ db = mysql.connector.connect(
 )
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route("/users/<string:user_id>/", methods=["GET", "PUT", "POST", "DELETE"])
 def users(user_id):
