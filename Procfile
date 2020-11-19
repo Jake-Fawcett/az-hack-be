@@ -1,1 +1,1 @@
-web: gunicorn -b 0.0.0.0:$PORT api:app
+web: gunicorn -t 150 api:app --bind 0.0.0.0:${PORT}
