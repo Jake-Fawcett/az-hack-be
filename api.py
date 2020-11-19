@@ -125,12 +125,13 @@ def user_reports(user_id, date):
 
 @app.route("/leaderboard", methods=["GET"])
 def leaderboard():
-    return ""
+    return "Hello World"
 
 @app.route("/leaderboard/<string:organisation_name>", methods=["GET"])
 def leaderboard_organisation():
     return ""
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get('PORT', 5000))
+    print(os.environ)
     app.run(debug=True, host='0.0.0.0', port=port)
