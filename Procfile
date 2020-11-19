@@ -1,1 +1,1 @@
-web: python -m api.py $PORT
+web: python api.py
