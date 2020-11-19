@@ -85,7 +85,7 @@ def user_reports(user_id, date):
 
 @app.route("/leaderboard", methods=["GET"])
 def leaderboard():
-    return ""
+    return "Hello World"
 
 @app.route("/leaderboard/<string:organisation_name>", methods=["GET"])
 def leaderboard_organisation():
