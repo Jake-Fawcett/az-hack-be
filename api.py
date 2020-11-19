@@ -41,7 +41,6 @@ report_table_headers = ["date", "user_id", "use_defaults", "diet", "car_travel",
     "plastic_disposal", "paper_disposal", "glass_disposal", "tin_disposal", "mobile_screentime", "computer_screentime", "tv_screentime"]
 
 @app.route("/users/<string:user_id>/", methods=["GET", "PUT", "POST", "DELETE"])
-@cross_origin()
 def users(user_id):
     if request.method == "POST":
         user = request.json
@@ -116,7 +115,6 @@ def users(user_id):
         return "Done."
 
 @app.route("/users/<string:user_id>/report/<string:date>/", methods=["GET", "PUT", "POST", "DELETE"])
-@cross_origin()
 def user_reports(user_id, date):
     if request.method == "POST":
         # Check this user doesn't already have a report today.
@@ -162,16 +160,13 @@ def user_reports(user_id, date):
         return ""
 
 @app.route("/leaderboard", methods=["GET"])
-@cross_origin()
 def leaderboard():
     return "Hello World"
 
 @app.route("/leaderboard/<string:organisation_name>", methods=["GET"])
-@cross_origin()
 def leaderboard_organisation():
     return ""
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
-    # print(os.environ)
     app.run(debug=True, host='0.0.0.0', port=port)
