@@ -32,11 +32,53 @@ db = mysql.connector.connect(
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+user_table_headers = ["user_id", "user_name", "diet_default", "car_travel_default", "train_travel_default",
+    "bus_travel_default", "food_disposal_default", "plastic_disposal_default", "paper_disposal_default",
+    "glass_disposal_default", "tin_disposal_default", "mobile_screentime_default", "computer_screetime_default",
+    "tv_screentime_default"]
+
+report_table_headers = ["date", "user_id", "use_defaults", "diet", "car_travel", "train_travel", "bus_travel", "food_disposal",
+    "plastic_disposal", "paper_disposal", "glass_disposal", "tin_disposal", "mobile_screentime", "computer_screentime", "tv_screentime"]
+
 @app.route("/users/<string:user_id>/", methods=["GET", "PUT", "POST", "DELETE"])
 def users(user_id):
     if request.method == "POST":
-        #request.form
-        return ""
+        user = request.json
+        print(user)
+        print(type(user))
+        # Make sure the user doesn't already exist before creatin one.
+        get_user_query = "SELECT * FROM Users WHERE user_id = '{}';"
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(get_user_query.format(user_id))
+        results = cursor.fetchall()
+
+        if len(results) == 0:
+            # No user with user_id so create new user.
+            # Extract the user features from the request body.
+            user_features = []
+            for header in user_table_headers:
+                if type(user[header]) == str:
+                    # Wrap strings with quotes
+                    user_features.append("'{}'".format(user[header]))
+                else:
+                    user_features.append(str(user[header]))
+            # Insert the new user.
+            insert_user_query = "INSERT INTO Users ({}) VALUES ({});".format(", ".join(user_table_headers), ", ".join(user_features))
+            # print(insert_user_query)
+            cursor.execute(insert_user_query)
+
+            # Insert the user into Organisations.
+            for organisation_name in user["organisations"]:
+                insert_organisations_query = "INSERT INTO Organisations (user_id, organisation_name) VALUES ('{}', '{}');".format(user_id, organisation_name)
+                print(insert_organisations_query)
+                cursor.execute(insert_organisations_query)
+
+            # Commit changes to mysql.
+            db.commit()
+            return "Done."
+        else: # len(results) == 1
+            return "User already exists."
+
     elif request.method == "GET":
         # Get the user with user_id.
         get_user_query = "SELECT * FROM Users WHERE user_id = '{}';"
@@ -60,13 +102,13 @@ def users(user_id):
         # return the user.
         return user
     elif request.method == "PUT":
+        # Not implemented as updating the user in frontend uses post.
         return ""
     else: # request.method == "DELETE":
         # Query to delete from users.
         query = "DELETE FROM {0} WHERE user_id = '{1}';"
         # Delete from all tables.
         for table in ("Users", "Organisations", "Reports"):
-            cursor = db.cursor(dictionary=True)
             formatted_query = query.format(table, user_id)
             cursor.execute(formatted_query)
         db.commit()
@@ -75,9 +117,43 @@ def users(user_id):
 @app.route("/users/<string:user_id>/report/<string:date>/", methods=["GET", "PUT", "POST", "DELETE"])
 def user_reports(user_id, date):
     if request.method == "POST":
-        return ""
+        # Check this user doesn't already have a report today.
+        get_report_query = "SELECT * FROM Reports WHERE user_id = '{}' and date = '{}';"
+        get_report_query = get_report_query.format(user_id, date)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(get_report_query)
+        results = cursor.fetchall()
+        if len(results) != 0:
+            return "This user has already reported for date."
+        # Add the report to the database.
+        report = request.json
+        # Extract the report features from the request body.
+        report_features = []
+        for header in report_table_headers:
+            if type(report[header]) == str:
+                # Wrap strings with quotes
+                report_features.append("'{}'".format(report[header]))
+            else:
+                report_features.append(str(report[header]))
+        # Insert the new user.
+        insert_report_query = "INSERT INTO Reports ({}) VALUES ({});".format(", ".join(report_table_headers), ", ".join(report_features))
+        print(insert_report_query)
+        cursor.execute(insert_report_query)
+        db.commit()
+        return "Done."
     elif request.method == "GET":
-        return ""
+        get_report_query = "SELECT * FROM Reports WHERE user_id = '{}' and date = '{}';"
+        get_report_query = get_report_query.format(user_id, date)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(get_report_query)
+        results = cursor.fetchall()
+        if len(results) == 0:
+            return "No reports with date and user_id."
+        else:
+            report = results[0]
+            # Format date
+            report["date"] = report["date"].isoformat()
+            return report
     elif request.method == "PUT":
         return ""
     else: # request.method == "DELETE":
@@ -93,5 +169,5 @@ def leaderboard_organisation():
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
-    print(os.environ)
+    # print(os.environ)
     app.run(debug=True, host='0.0.0.0', port=port)
